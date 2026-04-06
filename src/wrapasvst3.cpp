@@ -1359,7 +1359,7 @@ void ClapAsVst3::onIdle()
       // setup a ProcessAdapter just for flush with no audio
       Clap::ProcessAdapter pa;
       pa.setupProcessing(_plugin->_plugin, _plugin->_ext._params, audioInputs, audioOutputs, 0, 0, 0,
-                         this->parameters, componentHandler, nullptr, false, false);
+                         this->parameters, componentHandler, this, false, false);
       auto thisFn = _plugin->AlwaysAudioThread();  // just to pacify the clap-helper
 
       pa.flush();
