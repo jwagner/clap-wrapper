@@ -174,6 +174,9 @@ tresult PLUGIN_API ClapAsVst3::terminate()
     _plugin.reset();
   }
 
+  delete _processAdapter;
+  _processAdapter = nullptr;
+
   return super::terminate();
 }
 
@@ -184,7 +187,8 @@ tresult PLUGIN_API ClapAsVst3::setActive(TBool state)
     if (_active) return kResultFalse;
     if (!_plugin->activate()) return kResultFalse;
     _active = true;
-    _processAdapter = new Clap::ProcessAdapter();
+    if (!_processAdapter)
+      _processAdapter = new Clap::ProcessAdapter();
 
     auto supportsnoteexpression =
         (_expressionmap & clap_supported_note_expressions::AS_VST3_NOTE_EXPRESSION_PRESSURE);
@@ -214,8 +218,6 @@ tresult PLUGIN_API ClapAsVst3::setActive(TBool state)
       _plugin->deactivate();
     }
     _active = false;
-    delete _processAdapter;
-    _processAdapter = nullptr;
   }
   return super::setActive(state);
 }
@@ -1356,13 +1358,16 @@ void ClapAsVst3::onIdle()
     _requestedFlush = false;
     if (!_processing || !_processEverCalled)
     {
-      // setup a ProcessAdapter just for flush with no audio
-      Clap::ProcessAdapter pa;
-      pa.setupProcessing(_plugin->_plugin, _plugin->_ext._params, audioInputs, audioOutputs, 0, 0, 0,
-                         this->parameters, componentHandler, this, false, false);
+      if (!_processAdapter)
+      {
+        _processAdapter = new Clap::ProcessAdapter();
+        _processAdapter->setupProcessing(_plugin->_plugin, _plugin->_ext._params, audioInputs,
+                                         audioOutputs, 0, 0, 0, this->parameters,
+                                         componentHandler, this, false, false);
+      }
       auto thisFn = _plugin->AlwaysAudioThread();  // just to pacify the clap-helper
 
-      pa.flush();
+      _processAdapter->flush();
     }
   }
 
