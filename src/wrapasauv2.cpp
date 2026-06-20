@@ -1463,15 +1463,8 @@ void WrapAsAUV2::PostConstructor()
     {
       clap_audio_port_info inf;
       ap->get(pl, i, true, &inf);
-      auto* el = Inputs().GetIOElement(i);
-      auto b = CFStringCreateWithCString(nullptr, inf.name, kCFStringEncodingUTF8);
-      el->SetName(b);
-
-      // SetNumberOfElements seems to reset to the default stereo format
-      // so we need to reapply the channel_count here
-      auto sf = el->GetStreamFormat();
-      sf.mChannelsPerFrame = inf.channel_count;
-      el->SetStreamFormat(sf);
+      // SetNumberOfElements resets the bus, reapply the configuration.
+      addInputBus(i, &inf);
 
       /*
       AudioChannelLayout layout;
@@ -1488,15 +1481,7 @@ void WrapAsAUV2::PostConstructor()
     {
       clap_audio_port_info inf;
       ap->get(pl, i, false, &inf);
-      auto* el = Outputs().GetIOElement(i);
-      auto b = CFStringCreateWithCString(nullptr, inf.name, kCFStringEncodingUTF8);
-      el->SetName(b);
-
-      // SetNumberOfElements seems to reset to the default stereo format
-      // so we need to reapply the channel_count here
-      auto sf = el->GetStreamFormat();
-      sf.mChannelsPerFrame = inf.channel_count;
-      el->SetStreamFormat(sf);
+      addOutputBus(i, &inf);
 
       /*
       AudioChannelLayout layout;
